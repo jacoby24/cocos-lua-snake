@@ -6,19 +6,21 @@
 -- To change this template use File | Settings | File Templates.
 --
 local Snake = class("Snake")
-local Body = require("app.Body")
+local Body = require "app.Body"
 
 local cInitLen = 3
 
 function Snake:ctor(node)
     self.BodyArr = {}
     self.node = node
-    self.MoveDir = "left"
+    self:SetDir('left')
+
 
     for i=1,cInitLen do
         print("Grow",i)
         self:Grow()
     end
+    
 end
 
 function Snake:GetTailGrid()
@@ -49,6 +51,20 @@ local function offsetGridByDir(x, y, dir)
     print('error something')
 end
 
+function Snake:SetDir(dir)
+    if self.MoveDir == 'left' and dir =='right'  then
+        return
+    elseif self.MoveDir == 'right' and dir =='left'  then
+        return
+    elseif self.MoveDir == 'up' and dir =='down'  then
+        return
+    elseif self.MoveDir == 'dowm' and dir =='up'  then
+        return
+    else
+        self.MoveDir =  dir
+    end
+end
+
 function Snake:Update()
     if #self.BodyArr == 0 then
         return
@@ -66,6 +82,8 @@ function Snake:Update()
         body:Update()
     end
 end
+
+
 
 return Snake
 

@@ -24,8 +24,8 @@ function Body:ctor(snake,x ,y,node)
     self.snake = snake
     self.x = x
     self.y = y
-    self.sp = cc.Sprite:create("snake_body.png")
-    self.sp:setScale(0.5)
+    self.sp = cc.Sprite:create("snake_body.jpeg")
+   -- self.sp:setScale(0.5)
     node:addChild(self.sp)
 
     self:Update()
