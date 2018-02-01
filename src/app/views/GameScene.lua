@@ -5,15 +5,34 @@
 -- Time: 下午3:21
 -- To change this template use File | Settings | File Templates.
 --
+local cGridSize = 33
+local scaleRate = 1/display.contentScaleFactor
+
+cc.exports.Grid2Pos = function(x,y)
+    local visibleSize = cc.Director:getInstance():getVisibleSize()
+    local origin = cc.Director:getInstance():getVisibleOrigin()
+
+    local finalX = origin.x + visibleSize.width/2 + x * cGridSize * scaleRate
+    local finalY = origin.y + visibleSize.height/2 + y * cGridSize * scaleRate
+
+    return finalX, finalY
+end
+
+local size = cc.Director:getInstance():getVisibleSize()
+
+
 local Snake = require "app.Snake"
+local Fence = require "app.Fence"
 local Food = require "app.Food"
+local score = 0
+local cMoveSpeed = 0.3
+local round = 7
 
 local GameScene = class("GameScene",function()
     return cc.Scene:create()
 end)
 
 function GameScene:ctor()
-    print('game scene ')
     local function onNodeEvent(event)
         if event == 'enter' then
             self:onEnter()
@@ -22,26 +41,54 @@ function GameScene:ctor()
     self:registerScriptHandler(onNodeEvent)
 end
 function GameScene:onEnter()
-    print("Game start")
-    local cMoveSpeed = 0.3
+
+    self.state = 'running'
+
+    self.Fence = Fence.new(self,round)
+
     self.Snake = Snake.new(self)
-    self.Food = Food.new(self)
-
+    self.Food = Food.new(self,round-1)
     self:ProcessInput()
-
+    self:initScore()
     cc.exports.tick = function()
-        self.Snake:Update()
+        if self.state == 'running' then
+            self.Snake:Update()
+            if GameScene:eat(self.Snake,self.Food) then
+                self.Snake:Grow()
+                self.Food:Update()
+                self:setScore()
+                --            GameScene:setScore()
+            end
+        end
+        if self.Snake:HitSelf() or self.Snake:HitFence(round) then
+            self.state = 'dead'
+            self.Snake:Blink(function()
+                self:Reset()
+--                cc.Director:getInstance():getScheduler():unscheduleScriptEntry(schedule)
+            end)
+        end
     end
+    local schedule = cc.Director:getInstance():getScheduler():scheduleScriptFunc(tick,cMoveSpeed,false)
 
-    cc.Director:getInstance():getScheduler():scheduleScriptFunc(tick,cMoveSpeed,false)
 end
 
 function GameScene.create()
     local scene = GameScene.new()
---    scene:addChild(scene:createLayer())
     return scene
 end
 
+function GameScene:eat(snake,food)
+    local snakeArr = snake.BodyArr
+    local snakeHead = snakeArr[1]
+    local headX,headY = snakeHead.x,snakeHead.y
+
+    local foodX,foodY = food.posX,food.posY
+
+    if headX == foodX and headY == foodY then
+        return true
+    end
+    return false
+end
 
 local function vector2Dir(x,y)
     if math.abs(x) > math.abs(y) then
@@ -78,27 +125,34 @@ function GameScene:ProcessInput()
     eventDispatcher:addEventListenerWithSceneGraphPriority(listener,self)
 end
 
-function GameScene:addKeyboard()
+function GameScene:initScore()
+    local sp = cc.Sprite:create("food.jpeg")
+    self:addChild(sp)
+    sp:setPosition(Grid2Pos(12,6))
 
-    --注册键盘事件：上下左右控制蛇的方向
-    local function onKeyPressed(keyCode,event)
-        print("down")
-        if keyCode == 37 then
-            --left
-        elseif keyCode ==38 then
-            --up
-        elseif keyCode ==39 then
-            --right
-        elseif keyCode ==40 then
-            --down
-        end
+    self.label = cc.Label:createWithSystemFont(score,'Arial',66)
+    self.label:setPosition(Grid2Pos(12,4))
+    self:addChild(self.label)
+
+end
+function GameScene:setScore()
+    score = score + 1
+    self.label:setString(string.format("%d",score))
+end
+
+function GameScene:Reset()
+    if self.Snake ~= nil then
+        self.Snake:Kill()
     end
 
-    local listener = cc.EventListenerKeyboard:create()
-    listener:registerScriptHandler(onKeyPressed,cc.Handler.EVENT_KEYBOARD_PRESSED)
-    local eventDispatcher = cc.Director:getInstance():getEventDispatcher()
-    eventDispatcher:addEventListenerWithSceneGraphPriority(listener,self)
+    if self.Food ~= nil then
+        self.Food:Reset()
+    end
 
+    self.Snake = Snake.new(self)
+    self.Food = Food.new(self,round-1)
+
+    self.state = 'running'
 end
 
 return GameScene

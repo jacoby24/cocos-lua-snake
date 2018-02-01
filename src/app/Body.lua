@@ -7,32 +7,20 @@
 --
 local Body = class("body")
 
-local cGridSize = 33
-local scaleRate = 1/display.contentScaleFactor
-
-cc.exports.Grid2Pos = function(x,y)
-    local visibleSize = cc.Director:getInstance():getVisibleSize()
-    local origin = cc.Director:getInstance():getVisibleOrigin()
-
-    local finalX = origin.x + visibleSize.width/2 + x * cGridSize * scaleRate
-    local finalY = origin.y + visibleSize.height/2 + y * cGridSize * scaleRate
-
-    return finalX, finalY
-end
 
 function Body:ctor(snake,x ,y,node)
     self.snake = snake
     self.x = x
     self.y = y
+    self.node = node
     self.sp = cc.Sprite:create("snake_body.jpeg")
-   -- self.sp:setScale(0.5)
-    node:addChild(self.sp)
-
+    self.node:addChild(self.sp)
     self:Update()
 
 end
 
 function Body:Update()
+
     local posx, posy = Grid2Pos(self.x,self.y)
     self.sp:setPosition(posx,posy)
 end

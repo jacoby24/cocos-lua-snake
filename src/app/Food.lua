@@ -7,22 +7,37 @@
 --
 local Food = class('Food')
 
-local size = cc.Director:getInstance():getVisibleSize()
-
-function Food:ctor(node)
+function Food:ctor(node,r)
     self.node = node
+    self.round = r
+    
     self.sp = cc.Sprite:create("food.jpeg")
-    --self.sp:setScale(0.5)
-    node:addChild(self.sp)
+    self.node:addChild(self.sp)
     self:Update()
+end
 
+cc.exports.gernerateRandom = function(r)
+    math.randomseed(os.time())
+    return math.random(-r,r)
 end
 
 function Food:Update()
-    local posx = math.random(40,size.width-40)
-    local posy = math.random(40,size.height-40)
 
-    self.sp:setPosition(posx,posy)
+    local x,y = gernerateRandom(self.round),gernerateRandom(self.round)
+    local finalX,finalY = Grid2Pos(x,y)
+
+    self.sp:setPosition(finalX,finalY)
+    self:Blink()
+
+    self.posX,self.posY = x,y
+end
+function Food:Blink()
+    local blink = cc.Blink:create(2,3)
+    self.sp:runAction(blink)
+end
+
+function Food:Reset()
+    self.node:removeChild(self.sp)
 end
 
 return Food

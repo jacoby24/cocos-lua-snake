@@ -14,13 +14,9 @@ function Snake:ctor(node)
     self.BodyArr = {}
     self.node = node
     self:SetDir('left')
-
-
     for i=1,cInitLen do
-        print("Grow",i)
         self:Grow()
     end
-    
 end
 
 function Snake:GetTailGrid()
@@ -83,7 +79,46 @@ function Snake:Update()
     end
 end
 
+function Snake:HitSelf()
+    local headX,headY = self.BodyArr[1].x,self.BodyArr[1].y
+    if #self.BodyArr < 5 then
+        return false
+    else
+       for i,v in ipairs(self.BodyArr) do
+           if i>4 then
+                if headX == v.x and headY == v.y then
+                    return true
+                else
+                    return false
+                end
+           end
+       end
+    end
+end
 
+function Snake:HitFence(r)
+    local headX,headY = self.BodyArr[1].x,self.BodyArr[1].y
+    if headX == r or headX == -r or headY == r or headY == -r then
+        return true
+    end
+end
 
+function Snake:Blink(callback)
+    for index,body in ipairs(self.BodyArr) do
+        local blink = cc.Blink:create(3,6)
+        if index == 1 then
+            local a = cc.Sequence:create(blink,cc.CallFunc:create(callback))
+            body.sp:runAction(a)
+        else
+            body.sp:runAction(blink)
+        end
+    end
+end
+
+function Snake:Kill()
+    for _, body in ipairs(self.BodyArr) do
+        self.node:removeChild(body.sp)
+    end
+end
 return Snake
 
